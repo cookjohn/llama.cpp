@@ -91,7 +91,7 @@ static constexpr __host__ __device__ fattn_mma_config ggml_cuda_fattn_mma_get_co
     GGML_CUDA_FATTN_MMA_CONFIG_CASE(256, 256,  8, 128, 2,  64, 128, 128, 128, 2, true);
     GGML_CUDA_FATTN_MMA_CONFIG_CASE(256, 256, 16, 128, 2,  64, 128, 128, 128, 2, true);
     GGML_CUDA_FATTN_MMA_CONFIG_CASE(256, 256, 32, 128, 2,  64, 128, 128,  64, 2, true);
-    GGML_CUDA_FATTN_MMA_CONFIG_CASE(256, 256, 64, 128, 2,  64, 128, 128,  64, 2, true);
+    GGML_CUDA_FATTN_MMA_CONFIG_CASE(256, 256, 64, 256, 1,  64, 128, 128,  64, 2, true);
 
     GGML_CUDA_FATTN_MMA_CONFIG_CASE(320, 256, 32, 128, 2,  32, 128, 128, 128, 1, false);
     GGML_CUDA_FATTN_MMA_CONFIG_CASE(320, 256, 64, 256, 1,  32, 128, 128, 128, 1, false);
@@ -1852,7 +1852,7 @@ static __global__ void flash_attn_ext_f16(
 #endif // VOLTA_MMA_AVAILABLE
 
 #if __CUDA_ARCH__ == GGML_CUDA_CC_TURING
-    if (ncols1*ncols2 > 32) {
+    if (ncols1*ncols2 > 32 && !(DKQ == 256 && DV == 256)) {
         NO_DEVICE_CODE;
         return;
     }
