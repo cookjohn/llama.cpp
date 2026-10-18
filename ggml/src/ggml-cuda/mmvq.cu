@@ -331,6 +331,34 @@ bool ggml_cuda_should_use_mmvq(enum ggml_type type, int cc, int64_t ne11) {
                 return ne11 <= MMVQ_MAX_BATCH_SIZE;
         }
     }
+    if (GGML_CUDA_CC_IS_NVIDIA(cc) && cc == GGML_CUDA_CC_TURING) {
+        switch (type) { // tuned on RTX 2080 Ti
+            case GGML_TYPE_Q2_K:
+            case GGML_TYPE_Q3_K:
+                return ne11 <= 4;
+            case GGML_TYPE_Q4_K:
+            case GGML_TYPE_Q5_K:
+            case GGML_TYPE_IQ4_NL:
+            case GGML_TYPE_MXFP4:
+            case GGML_TYPE_NVFP4:
+                return ne11 <= 5;
+            case GGML_TYPE_Q1_0:
+            case GGML_TYPE_Q2_0:
+            case GGML_TYPE_Q4_0:
+            case GGML_TYPE_IQ1_S:
+            case GGML_TYPE_IQ2_XXS:
+            case GGML_TYPE_IQ2_XS:
+            case GGML_TYPE_IQ2_S:
+            case GGML_TYPE_IQ3_XXS:
+            case GGML_TYPE_IQ3_S:
+            case GGML_TYPE_IQ4_XS:
+                return ne11 <= 6;
+            case GGML_TYPE_Q5_0:
+                return ne11 <= 7;
+            default:
+                return ne11 <= MMVQ_MAX_BATCH_SIZE;
+        }
+    }
     if (GGML_CUDA_CC_IS_NVIDIA(cc) && cc == GGML_CUDA_CC_BLACKWELL) {
         switch (type) { // tuned on RTX 5090
             case GGML_TYPE_Q2_K:
@@ -610,7 +638,7 @@ static constexpr __host__ __device__ int calc_rows_per_block(ggml_type type, int
             case 6:
             case 7:
             case 8:
-                return 2;
+                return table_id == MMVQ_PARAMETERS_TURING ? 4 : 2;
             default:
                 return 1;
         }
